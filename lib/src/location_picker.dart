@@ -428,7 +428,7 @@ class _FlutterLocationPickerState extends State<FlutterLocationPicker>
       displayName = decodedResponse['display_name'];
       address = decodedResponse['address'];
     } else {
-      center = const LatLong(0, 0);
+      center = LatLong(0, 0);
       address = decodedResponse as Map<String, dynamic>;
     }
     return PickedData(center, displayName, address);
