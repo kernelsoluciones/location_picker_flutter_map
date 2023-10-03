@@ -390,11 +390,11 @@ class _FlutterLocationPickerState extends State<FlutterLocationPicker>
         'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1&accept-language=${widget.mapLanguage}';
 
     try {
-      var response = await client.post(Uri.parse(url));
+      var response = await client.get(Uri.parse(url));
       var decodedResponse =
-          jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
+      jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
       _searchController.text =
-          decodedResponse['display_name'] ?? "Search Location";
+          decodedResponse['display_name'] ?? "This Location is not accessible";
       setState(() {
         isLoading = false;
       });
@@ -418,12 +418,20 @@ class _FlutterLocationPickerState extends State<FlutterLocationPicker>
     var client = http.Client();
     String url =
         'https://nominatim.openstreetmap.org/reverse?format=json&lat=${_mapController.center.latitude}&lon=${_mapController.center.longitude}&zoom=18&addressdetails=1&accept-language=${widget.mapLanguage}';
-
-    var response = await client.post(Uri.parse(url));
+    var response = await client.get(Uri.parse(url));
     var decodedResponse =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
-    String displayName = decodedResponse['display_name'];
-    return PickedData(center, displayName, decodedResponse['address']);
+    jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
+    String displayName = "This Location is not accessible";
+    Map<String, dynamic> address;
+
+    if (decodedResponse['display_name'] != null) {
+      displayName = decodedResponse['display_name'];
+      address = decodedResponse['address'];
+    } else {
+      center = const LatLong(0, 0);
+      address = decodedResponse as Map<String, dynamic>;
+    }
+    return PickedData(center, displayName, address);
   }
 
   @override
@@ -572,15 +580,15 @@ class _FlutterLocationPickerState extends State<FlutterLocationPicker>
                     try {
                       String url =
                           'https://nominatim.openstreetmap.org/search?q=$value&format=json&polygon_geojson=1&addressdetails=1&accept-language=${widget.mapLanguage}';
-                      var response = await client.post(Uri.parse(url));
+                      var response = await client.get(Uri.parse(url));
                       var decodedResponse =
-                          jsonDecode(utf8.decode(response.bodyBytes))
-                              as List<dynamic>;
+                      jsonDecode(utf8.decode(response.bodyBytes))
+                      as List<dynamic>;
                       _options = decodedResponse
                           .map((e) => OSMdata(
-                              displayname: e['display_name'],
-                              latitude: double.parse(e['lat']),
-                              longitude: double.parse(e['lon'])))
+                          displayname: e['display_name'],
+                          latitude: double.parse(e['lat']),
+                          longitude: double.parse(e['lon'])))
                           .toList();
                       setState(() {});
                     } on Exception catch (e) {
